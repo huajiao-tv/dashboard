@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/huajiao-tv/dashboard/models"
+	"github.com/huajiao-tv/dashboard/dao"
 	"github.com/youlu-cn/ginp"
 )
 
@@ -24,7 +24,7 @@ func (c ConfigController) TokenRequired(string) bool {
 }
 
 func (c ConfigController) ListHandler(req *ginp.Request) *ginp.Response {
-	query := models.Query{}
+	query := dao.Query{}
 	if err := req.Bind(&query); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -56,14 +56,14 @@ func (c ConfigController) GetTagsHandler(_ *ginp.Request) *ginp.Response {
 
 func (c ConfigController) getTopicConfig(queue string) (map[string]*TopicConfig, error) {
 	confMap := make(map[string]*TopicConfig)
-	topics, err := models.Topic{}.Query(&models.Query{Queue: queue})
+	topics, err := dao.Topic{}.Query(&dao.Query{Queue: queue})
 	if err != nil {
 		return nil, err
 	} else if len(topics) == 0 {
 		return confMap, nil
 	}
 	for _, topic := range topics {
-		storage, err := models.Storage{}.Get(topic.Storage)
+		storage, err := dao.Storage{}.Get(topic.Storage)
 		if err != nil {
 			return nil, err
 		}
@@ -100,19 +100,19 @@ func (c ConfigController) getTopicConfig(queue string) (map[string]*TopicConfig,
 
 func (c ConfigController) getAllQueueConfig() (string, error) {
 	confMap := make(map[string]*QueueConfig)
-	topics, err := models.Topic{}.Query(&models.Query{})
+	topics, err := dao.Topic{}.Query(&dao.Query{})
 	if err != nil {
 		return "", err
 	}
-	queues, err := models.Queue{}.Query(&models.Query{})
+	queues, err := dao.Queue{}.Query(&dao.Query{})
 	if err != nil {
 		return "", err
 	}
-	queuesMap := make(map[string]*models.Queue)
+	queuesMap := make(map[string]*dao.Queue)
 	for _, queue := range queues {
 		queuesMap[queue.Name] = queue
 	}
-	storages := make(map[uint64]*models.Storage)
+	storages := make(map[uint64]*dao.Storage)
 	for _, topic := range topics {
 		queue, ok := queuesMap[topic.Queue]
 		if !ok {
@@ -129,7 +129,7 @@ func (c ConfigController) getAllQueueConfig() (string, error) {
 		}
 		storage := storages[topic.Storage]
 		if storage == nil {
-			if stmp, err := (models.Storage{}.Get(topic.Storage)); err != nil {
+			if stmp, err := (dao.Storage{}.Get(topic.Storage)); err != nil {
 				return "", err
 			} else {
 				storage = stmp
@@ -174,7 +174,7 @@ func (c ConfigController) getAllQueueConfig() (string, error) {
 
 func (c ConfigController) getQueueConfig() (string, error) {
 	confMap := make(map[string]*QueueConfig)
-	queues, err := models.Queue{}.Query(&models.Query{})
+	queues, err := dao.Queue{}.Query(&dao.Query{})
 	if err != nil {
 		return "", err
 	}
@@ -200,12 +200,12 @@ func (c ConfigController) getQueueConfig() (string, error) {
 
 func (c ConfigController) getTagsConfig() (string, error) {
 	tags := make(map[string]map[string][]string)
-	topics, err := models.Topic{}.Query(&models.Query{})
+	topics, err := dao.Topic{}.Query(&dao.Query{})
 	if err != nil {
 		return "", err
 	}
 	for _, topic := range topics {
-		if topic.Status != models.TopicStatusEnable {
+		if topic.Status != dao.TopicStatusEnable {
 			continue
 		}
 		if queue, ok := tags[topic.System]; !ok {
@@ -228,7 +228,7 @@ func (c ConfigController) getTagsConfig() (string, error) {
 }
 
 func (c ConfigController) getMachineConfig(hosts string) (map[string]*MachineConfig, error) {
-	ms, err := models.Machine{}.Query(&models.Query{Keyword: hosts})
+	ms, err := dao.Machine{}.Query(&dao.Query{Keyword: hosts})
 	if err != nil {
 		return nil, err
 	}

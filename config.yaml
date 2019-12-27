@@ -1,0 +1,28 @@
+dashboard:
+  listen: 12335
+  admin-pass: admin@pass
+gokeeper:
+  discover: keeper:7001
+  admin-addr: keeper:17000
+  domain: test
+ldap:
+  enable: true
+  address: ldap:389
+  base-dn: ""
+postgres:
+  host: postgres
+  port: 5432
+  database: dashboard
+  username: dashboard
+  password: postgres-pwd
+redis:
+  host: redis
+  port: 6379
+  password:
+  db: 0
+etcd:
+  endpoints:
+    - http://etcd-0:2379
+    - http://etcd-1:2379
+  username:
+  password:

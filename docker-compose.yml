@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  dashboard:
+    image: dashboard
+    build: .
+    ports:
+    - 8360:80

@@ -9,6 +9,7 @@ import (
 
 	"github.com/huajiao-tv/dashboard/config"
 	"github.com/huajiao-tv/dashboard/crontab"
+	"github.com/huajiao-tv/dashboard/dao"
 	"github.com/huajiao-tv/dashboard/keeper"
 	"github.com/huajiao-tv/dashboard/models"
 	"github.com/youlu-cn/ginp"
@@ -29,11 +30,11 @@ func (c QueueController) TokenRequired(string) bool {
 
 func (c QueueController) ListHandler(_ *ginp.Request) *ginp.Response {
 	type QueueData struct {
-		*models.Queue
+		*dao.Queue
 		TopicCount int     `json:"topics"`
 		AddQps     float64 `json:"qps"`
 	}
-	queues, err := models.Queue{}.Query(&models.Query{})
+	queues, err := dao.Queue{}.Query(&dao.Query{})
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusInternalServerError, err)
 	}
@@ -52,16 +53,16 @@ func (c QueueController) ListHandler(_ *ginp.Request) *ginp.Response {
 
 func (c QueueController) ListSystemHandler(_ *ginp.Request) *ginp.Response {
 	type QueueSystestmData struct {
-		System *models.System  `json:"system"`
-		Queue  []*models.Queue `json:"queue"`
+		System *dao.System  `json:"system"`
+		Queue  []*dao.Queue `json:"queue"`
 	}
-	sys, err := models.System{}.Query(&models.Query{})
+	sys, err := dao.System{}.Query(&dao.Query{})
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusInternalServerError, err)
 	}
 	data := make([]*QueueSystestmData, 0)
 	for _, sy := range sys {
-		topics, err := models.Topic{}.Query(&models.Query{System: sy.Name})
+		topics, err := dao.Topic{}.Query(&dao.Query{System: sy.Name})
 		if err != nil {
 			return ginp.ErrorResponse(http.StatusInternalServerError, err)
 		}
@@ -73,7 +74,7 @@ func (c QueueController) ListSystemHandler(_ *ginp.Request) *ginp.Response {
 		for queueName := range tmp {
 			queueNames = append(queueNames, queueName)
 		}
-		queues, err := models.Queue{}.FindAllByNames(queueNames)
+		queues, err := dao.Queue{}.FindAllByNames(queueNames)
 		if err != nil {
 			return ginp.ErrorResponse(http.StatusInternalServerError, err)
 		}
@@ -82,14 +83,14 @@ func (c QueueController) ListSystemHandler(_ *ginp.Request) *ginp.Response {
 		}
 		data = append(data, &QueueSystestmData{System: sy, Queue: queues})
 	}
-	blankQueue, err := models.Queue{}.FindBlankQueue()
+	blankQueue, err := dao.Queue{}.FindBlankQueue()
 	if err == nil && len(blankQueue) > 0 {
-		data = append(data, &QueueSystestmData{System: &models.System{Name: "未使用", Describe: "空Queue"}, Queue: blankQueue})
+		data = append(data, &QueueSystestmData{System: &dao.System{Name: "未使用", Describe: "空Queue"}, Queue: blankQueue})
 	}
 	return ginp.DataResponse(data)
 }
 
-//更新queue 只有名下topic不为空才能修改name和password
+// 更新queue 只有名下topic不为空才能修改name和password
 func (c QueueController) UpdateHandlerPostAction(req *ginp.Request) *ginp.Response {
 	postData := struct {
 		ID       uint64 `binding:"required" json:"id"`
@@ -102,7 +103,7 @@ func (c QueueController) UpdateHandlerPostAction(req *ginp.Request) *ginp.Respon
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
 
-	dbQueue, err := models.Queue{}.Get(postData.ID)
+	dbQueue, err := dao.Queue{}.Get(postData.ID)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -120,11 +121,11 @@ func (c QueueController) UpdateHandlerPostAction(req *ginp.Request) *ginp.Respon
 	dbQueue.Operator = req.GetUserInfo().Name
 	dbQueue.Comment = postData.Comment
 
-	//如果name为空 就保持原来name
+	// 如果name为空 就保持原来name
 	if postData.Name != "" {
 		dbQueue.Name = postData.Name
 	}
-	//如果密码为空 就保持原来密码
+	// 如果密码为空 就保持原来密码
 	if postData.Password != "" {
 		dbQueue.Password = postData.Password
 	}
@@ -136,7 +137,7 @@ func (c QueueController) UpdateHandlerPostAction(req *ginp.Request) *ginp.Respon
 }
 
 func (c QueueController) AddHandlerPostAction(req *ginp.Request) *ginp.Response {
-	var queue models.Queue
+	var queue dao.Queue
 	if err := req.BindJSON(&queue); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -152,7 +153,7 @@ func (c QueueController) DeleteHandlerPostAction(req *ginp.Request) *ginp.Respon
 	if err := req.Bind(&form); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
-	queue, err := models.Queue{}.Get(form.Id)
+	queue, err := dao.Queue{}.Get(form.Id)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -173,7 +174,7 @@ func (c QueueController) ExportHandlerPostAction(req *ginp.Request) *ginp.Respon
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
 	// 根据id查出所有的 queue
-	queues, err := models.Queue{}.FindAllByIds(exportIds.Ids)
+	queues, err := dao.Queue{}.FindAllByIds(exportIds.Ids)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	} else if len(queues) == 0 {
@@ -181,21 +182,21 @@ func (c QueueController) ExportHandlerPostAction(req *ginp.Request) *ginp.Respon
 	}
 
 	qCount := len(queues)
-	tmpResData := make(map[string]*models.TransModelQueue) //return 的临时数据
+	tmpResData := make(map[string]*dao.TransModelQueue) //return 的临时数据
 	qNames := make([]string, qCount)
 	for k, q := range queues {
 		qNames[k] = q.Name
-		tmpResData[q.Name] = &models.TransModelQueue{
+		tmpResData[q.Name] = &dao.TransModelQueue{
 			Name:     q.Name,
 			Desc:     q.Describe,
 			Password: q.Password,
 			Comment:  q.Comment,
-			Topics:   make([]models.TransModelTopic, 0),
+			Topics:   make([]dao.TransModelTopic, 0),
 		}
 	}
 
 	// 查出queue_id 查出所有的topic
-	topics, err := models.Topic{}.FindAllByQueues(qNames)
+	topics, err := dao.Topic{}.FindAllByQueues(qNames)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -206,7 +207,7 @@ func (c QueueController) ExportHandlerPostAction(req *ginp.Request) *ginp.Respon
 		}
 	}
 
-	resData := make([]models.TransModelQueue, len(queues)) //return 的最终数据
+	resData := make([]dao.TransModelQueue, len(queues)) //return 的最终数据
 	k := 0
 	for _, tmp := range tmpResData {
 		resData[k] = *tmp
@@ -219,7 +220,7 @@ func (c QueueController) ExportHandlerPostAction(req *ginp.Request) *ginp.Respon
 // 依赖的system和storage如果不存在则报错
 func (c QueueController) ImportHandlerPostAction(req *ginp.Request) *ginp.Response {
 	postData := struct {
-		Data []models.TransModelQueue `binding:"required" json:"data"`
+		Data []dao.TransModelQueue `binding:"required" json:"data"`
 	}{}
 	if err := req.BindJSON(&postData); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
@@ -235,10 +236,10 @@ func (c QueueController) ImportHandlerPostAction(req *ginp.Request) *ginp.Respon
 		wg.Add(1)
 
 		// import queue
-		go func(qItem models.TransModelQueue) {
+		go func(qItem dao.TransModelQueue) {
 			defer wg.Done()
 
-			res := models.ImportQueue(qItem, req.GetUserInfo().Name)
+			res := models.NewQueue().ImportQueue(qItem, req.GetUserInfo().Name)
 
 			//汇总最终结果
 			resMu.Lock()
@@ -260,10 +261,10 @@ func (c QueueController) ImportHandlerPostAction(req *ginp.Request) *ginp.Respon
 				return ginp.ErrorResponse(http.StatusBadRequest, errors.New(fmt.Sprintf("get tags in keeper error: %v", err)))
 			}
 			comment := "import queue"
-			err = keeper.ConfigClient.ManageConfig(*config.Domain, []*keeper.ConfigOperate{
+			err = keeper.ConfigClient.ManageConfig(config.GlobalConfig.Keeper.Domain, []*keeper.ConfigOperate{
 				{
 					Action:  keeper.UpdateConfig,
-					Cluster: *config.Domain,
+					Cluster: config.GlobalConfig.Keeper.Domain,
 					File:    "queue.conf",
 					Section: keeper.DefaultSection,
 					Key:     "tags_mapping",
@@ -272,7 +273,7 @@ func (c QueueController) ImportHandlerPostAction(req *ginp.Request) *ginp.Respon
 					Comment: comment,
 				}, {
 					Action:  keeper.UpdateConfig,
-					Cluster: *config.Domain,
+					Cluster: config.GlobalConfig.Keeper.Domain,
 					File:    "queue.conf",
 					Section: keeper.DefaultSection,
 					Key:     "queue_config",

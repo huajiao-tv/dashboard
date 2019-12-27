@@ -16,15 +16,15 @@ const (
 )
 
 func Init() {
-	ConfigClient = NewClient(*config.KeeperAdmin)
+	ConfigClient = NewClient(config.GlobalConfig.Keeper.AdminAddress)
 
-	opt := discovery.WithDiscovery("dashboard-client", []string{*config.Domain})
-	DiscoveryClient = discovery.New(*config.KeeperDiscovery, opt)
+	opt := discovery.WithDiscovery("dashboard-client", []string{config.GlobalConfig.Keeper.Domain})
+	DiscoveryClient = discovery.New(config.GlobalConfig.Keeper.DiscoverAddress, opt)
 	go DiscoveryClient.Work()
 }
 
 func GetNodeList() ([]string, error) {
-	res, err := DiscoveryClient.GetService(*config.Domain)
+	res, err := DiscoveryClient.GetService(config.GlobalConfig.Keeper.Domain)
 	if err != nil {
 		return nil, err
 	}
@@ -41,5 +41,5 @@ func GetNodeList() ([]string, error) {
 }
 
 func GetNode() (string, error) {
-	return DiscoveryClient.GetServiceAddr(*config.Domain, AdminSchemaName)
+	return DiscoveryClient.GetServiceAddr(config.GlobalConfig.Keeper.Domain, AdminSchemaName)
 }

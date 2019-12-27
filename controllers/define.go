@@ -1,6 +1,10 @@
 package controllers
 
-import "time"
+import (
+	"time"
+
+	"github.com/huajiao-tv/dashboard/dao"
+)
 
 type PageData struct {
 	Items interface{} `json:"items"`
@@ -73,4 +77,14 @@ type TopicSummary struct {
 	AlarmRetry  int         `json:"alarm_retry"`
 	HttpConfig  string      `json:"http_config"`
 	TopicConfig string      `json:"topic_config"`
+}
+
+type TaskD struct {
+	*dao.Task
+	Statics map[string]string
+}
+
+type TaskN struct {
+	dao.TaskDetail
+	Statics map[string]string
 }

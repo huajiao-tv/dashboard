@@ -23,18 +23,26 @@ const (
 )
 
 var (
-	SystemJobExecStats  SystemJobExecCollect
-	TopicMachineMetrics TopicMachineMetricsCollect
+	RedisState          = newRedisStateCollect()
+	TaskState           = newTaskStatusCollect()
+	QueueCollectStats   = newQueueCollect()
+	TopicLengthStats    = newTopicLengthCollect()
+	SystemJobExecStats  = newSystemJobExecCollect()
+	TopicScriptsStatus  = newTopicScriptsStatusCheck()
+	TopicMachineMetrics = newTopicMachineMetricsCollect()
 )
 
 func Init() {
-	TopicMachineMetrics.collect()
-
 	c := cron.New()
+	c.AddFunc("@every 1m", RedisState.update)
+	c.AddFunc("@every 10s", RedisState.collect)
+	c.AddFunc("@every 1m", QueueCollectStats.collect)
+	c.AddFunc("@every 1m", TopicLengthStats.collect)
 	c.AddFunc("@every 1m", SystemJobExecStats.collect)
 	c.AddFunc("@every 1m", TopicMachineMetrics.collect)
+	c.AddFunc("@every 5m", TopicScriptsStatus.collect)
+	c.AddFunc("@every 1m", TaskState.collect)
 	c.AddFunc("@every 1m", TaskTestClear)
-	c.AddFunc("@every 1m", TaskStatusSync)
 
 	c.Start()
 }

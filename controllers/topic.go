@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -12,9 +11,8 @@ import (
 
 	"github.com/huajiao-tv/dashboard/config"
 	"github.com/huajiao-tv/dashboard/crontab"
+	"github.com/huajiao-tv/dashboard/dao"
 	"github.com/huajiao-tv/dashboard/keeper"
-	"github.com/huajiao-tv/dashboard/models"
-	"github.com/huajiao-tv/dashboard/service"
 	"github.com/youlu-cn/ginp"
 )
 
@@ -32,12 +30,12 @@ func (c TopicController) TokenRequired(string) bool {
 }
 
 func (c TopicController) AddHandlerPostAction(req *ginp.Request) *ginp.Response {
-	topic := models.Topic{}
+	topic := dao.Topic{}
 	if err := req.BindJSON(&topic); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
 	if topic.Password == "" {
-		if q, err := (models.Queue{}.GetByName(topic.Queue)); err != nil {
+		if q, err := (dao.Queue{}.GetByName(topic.Queue)); err != nil {
 			return ginp.ErrorResponse(http.StatusInternalServerError, err)
 		} else {
 			topic.Password = q.Password
@@ -55,11 +53,11 @@ func (c TopicController) AddHandlerPostAction(req *ginp.Request) *ginp.Response 
 	if err := c.updateKeeper(topic.Comment); err != nil {
 		return ginp.ErrorResponse(http.StatusInternalServerError, err)
 	}
-	(&service.TopicService{}).UpdateScriptStatus(topic)
+	crontab.TopicScriptsStatus.Update(topic)
 	return ginp.DataResponse(nil)
 }
 
-func (c TopicController) checkRunType(topic models.Topic) error {
+func (c TopicController) checkRunType(topic dao.Topic) error {
 	switch topic.RunType {
 	case 0:
 		return nil
@@ -77,7 +75,7 @@ func (c TopicController) checkRunType(topic models.Topic) error {
 }
 
 func (c TopicController) UpdateHandlerPostAction(req *ginp.Request) *ginp.Response {
-	topic := models.Topic{}
+	topic := dao.Topic{}
 	if err := req.BindJSON(&topic); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -85,7 +83,7 @@ func (c TopicController) UpdateHandlerPostAction(req *ginp.Request) *ginp.Respon
 	if err := c.checkRunType(topic); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
-	dbTopic, err := models.Topic{}.Get(topic.ID)
+	dbTopic, err := dao.Topic{}.Get(topic.ID)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -109,7 +107,7 @@ func (c TopicController) UpdateHandlerPostAction(req *ginp.Request) *ginp.Respon
 	if err := Topic.updateKeeper(topic.Comment); err != nil {
 		return ginp.ErrorResponse(http.StatusInternalServerError, err)
 	}
-	(&service.TopicService{}).UpdateScriptStatus(*dbTopic)
+	crontab.TopicScriptsStatus.Update(*dbTopic)
 
 	return ginp.DataResponse(dbTopic)
 }
@@ -119,7 +117,7 @@ func (c TopicController) DeleteHandlerPostAction(req *ginp.Request) *ginp.Respon
 	if err := req.Bind(&form); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
-	topic, err := models.Topic{}.Get(form.Id)
+	topic, err := dao.Topic{}.Get(form.Id)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -155,35 +153,35 @@ func (c TopicController) DefaultThresholdHandler(_ *ginp.Request) *ginp.Response
 }
 
 func (c TopicController) QueueSummaryHandler(req *ginp.Request) *ginp.Response {
-	query := models.Query{}
+	query := dao.Query{}
 	if err := req.Bind(&query); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
 	if query.Queue == "" {
 		return ginp.ErrorResponse(http.StatusBadRequest, errors.New("empty queue"))
 	}
-	topics, err := models.Topic{}.Query(&query)
+	topics, err := dao.Topic{}.Query(&query)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusInternalServerError, err)
 	}
 	data := make([]*TopicSummary, 0, len(topics))
-	machinesList := make(map[string][]*models.Machine)
-	storages := make(map[uint64]*models.Storage)
+	machinesList := make(map[string][]*dao.Machine)
+	storages := make(map[uint64]*dao.Storage)
 	for _, t := range topics {
-		if !models.CheckPermission(req.GetUserInfo(), t.System) {
+		if !dao.CheckPermission(req.GetUserInfo(), t.System) {
 			continue
 		}
 		machines := machinesList[t.System]
 		var err error
 		if machines == nil {
-			if machines, err = (models.Machine{}.Query(&models.Query{System: t.System})); err != nil {
+			if machines, err = (dao.Machine{}.Query(&dao.Query{System: t.System})); err != nil {
 				return ginp.ErrorResponse(http.StatusInternalServerError, err)
 			}
 			machinesList[t.System] = machines
 		}
 		st := storages[t.Storage]
 		if st == nil {
-			if st, err = (models.Storage{}.Get(t.Storage)); err != nil {
+			if st, err = (dao.Storage{}.Get(t.Storage)); err != nil {
 				return ginp.ErrorResponse(http.StatusInternalServerError, err)
 			}
 			storages[t.Storage] = st
@@ -214,7 +212,7 @@ func (c TopicController) QueueSummaryHandler(req *ginp.Request) *ginp.Response {
 }
 
 func (c TopicController) SystemSummaryHandler(req *ginp.Request) *ginp.Response {
-	query := models.Query{}
+	query := dao.Query{}
 	if err := req.Bind(&query); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -222,20 +220,20 @@ func (c TopicController) SystemSummaryHandler(req *ginp.Request) *ginp.Response 
 	if query.System == "" {
 		return ginp.ErrorResponse(http.StatusBadRequest, errors.New("empty system"))
 	}
-	topics, err := models.Topic{}.Query(&query)
+	topics, err := dao.Topic{}.Query(&query)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusInternalServerError, err)
 	}
-	machines, err := models.Machine{}.Query(&query)
+	machines, err := dao.Machine{}.Query(&query)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusInternalServerError, err)
 	}
 	data := make([]*TopicSummary, 0, len(topics))
-	storages := make(map[uint64]*models.Storage)
+	storages := make(map[uint64]*dao.Storage)
 	for _, t := range topics {
 		st := storages[t.Storage]
 		if st == nil {
-			if stmp, err := (models.Storage{}.Get(t.Storage)); err != nil {
+			if stmp, err := (dao.Storage{}.Get(t.Storage)); err != nil {
 				return ginp.ErrorResponse(http.StatusInternalServerError, err)
 			} else {
 				st = stmp
@@ -267,7 +265,7 @@ func (c TopicController) SystemSummaryHandler(req *ginp.Request) *ginp.Response 
 }
 
 func (c TopicController) GetRetryErrorsHandler(req *ginp.Request) *ginp.Response {
-	query := models.Query{}
+	query := dao.Query{}
 	if err := req.Bind(&query); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -298,7 +296,7 @@ func (c TopicController) GetRetryErrorsHandler(req *ginp.Request) *ginp.Response
 }
 
 func (c TopicController) GetLengthHandler(req *ginp.Request) *ginp.Response {
-	query := models.Query{}
+	query := dao.Query{}
 	if err := req.BindJSON(&query); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -311,9 +309,8 @@ func (c TopicController) GetLengthHandler(req *ginp.Request) *ginp.Response {
 	}
 	data := map[string]interface{}{}
 	if len(query.Machines) > 0 {
-		metrics := crontab.GetTopicMachineMetrics().GetMetric()
 		for _, m := range query.Machines {
-			metric := metrics.Get(query.Queue, query.Topic, m)
+			metric := crontab.TopicMachineMetrics.Get(query.Queue, query.Topic, m)
 			data[m] = metric
 		}
 	}
@@ -330,7 +327,7 @@ func (c TopicController) GetLengthHandler(req *ginp.Request) *ginp.Response {
 }
 
 func (c TopicController) CleanRetryHandlerPostAction(req *ginp.Request) *ginp.Response {
-	query := models.Query{}
+	query := dao.Query{}
 	if err := req.BindJSON(&query); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -352,7 +349,7 @@ func (c TopicController) CleanRetryHandlerPostAction(req *ginp.Request) *ginp.Re
 }
 
 func (c TopicController) CleanStatisticsHandlerPostAction(req *ginp.Request) *ginp.Response {
-	query := models.Query{}
+	query := dao.Query{}
 	if err := req.BindJSON(&query); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -386,7 +383,7 @@ func (c TopicController) CleanStatisticsHandlerPostAction(req *ginp.Request) *gi
 
 func (c TopicController) RecoverRetryHandlerPostAction(req *ginp.Request) *ginp.Response {
 	form := struct {
-		models.Query
+		dao.Query
 		Count int `json:"count"`
 	}{}
 	if err := req.BindJSON(&form); err != nil {
@@ -409,16 +406,11 @@ func (c TopicController) RecoverRetryHandlerPostAction(req *ginp.Request) *ginp.
 	return ginp.ErrorResponse(http.StatusInternalServerError, errors.New("no servers"))
 }
 
-func (c TopicController) getMachineStats(queue, topic string, machines []*models.Machine) []interface{} {
+func (c TopicController) getMachineStats(queue, topic string, machines []*dao.Machine) []interface{} {
 	data := make([]interface{}, 0, len(machines))
 	for _, machine := range machines {
-		stats := crontab.GetTopicMachineMetrics().Get(queue, topic, machine.IP)
-		k := fmt.Sprintf(service.TOPIC_KEY_TEMP, topic, queue, machine.IP)
-		q, ok := service.TopicScript.Load(k)
-		if ok {
-			body, _ := json.Marshal(q)
-			stats.Question = string(body)
-		}
+		stats := crontab.TopicMachineMetrics.Get(queue, topic, machine.IP)
+		stats.Question = crontab.TopicScriptsStatus.Get(queue, topic, machine.IP)
 		data = append(data, stats)
 	}
 	return data
@@ -433,10 +425,10 @@ func (c TopicController) updateKeeper(comment string) error {
 	if err != nil {
 		return err
 	}
-	return keeper.ConfigClient.ManageConfig(*config.Domain, []*keeper.ConfigOperate{
+	return keeper.ConfigClient.ManageConfig(config.GlobalConfig.Keeper.Domain, []*keeper.ConfigOperate{
 		{
 			Action:  keeper.UpdateConfig,
-			Cluster: *config.Domain,
+			Cluster: config.GlobalConfig.Keeper.Domain,
 			File:    "queue.conf",
 			Section: keeper.DefaultSection,
 			Key:     "tags_mapping",
@@ -445,7 +437,7 @@ func (c TopicController) updateKeeper(comment string) error {
 			Comment: comment,
 		}, {
 			Action:  keeper.UpdateConfig,
-			Cluster: *config.Domain,
+			Cluster: config.GlobalConfig.Keeper.Domain,
 			File:    "queue.conf",
 			Section: keeper.DefaultSection,
 			Key:     "queue_config",
@@ -457,7 +449,7 @@ func (c TopicController) updateKeeper(comment string) error {
 }
 
 func (c TopicController) SearchHandler(req *ginp.Request) *ginp.Response {
-	query := models.Query{}
+	query := dao.Query{}
 	if err := req.BindJSON(&query); err != nil {
 		return ginp.ErrorResponse(http.StatusBadRequest, err)
 	}
@@ -478,28 +470,28 @@ func (c TopicController) SearchHandler(req *ginp.Request) *ginp.Response {
 		con = "and"
 	}
 
-	topics, err := models.Topic{}.Search(query.System, queue, topic, con)
+	topics, err := dao.Topic{}.Search(query.System, queue, topic, con)
 	if err != nil {
 		return ginp.ErrorResponse(http.StatusInternalServerError, err)
 	}
 	data := make([]*TopicSummary, 0, len(topics))
-	machinesList := make(map[string][]*models.Machine)
-	storages := make(map[uint64]*models.Storage)
+	machinesList := make(map[string][]*dao.Machine)
+	storages := make(map[uint64]*dao.Storage)
 	for _, t := range topics {
-		if !models.CheckPermission(req.GetUserInfo(), t.System) || len(data) >= 30 {
+		if !dao.CheckPermission(req.GetUserInfo(), t.System) || len(data) >= 30 {
 			continue
 		}
 		machines := machinesList[t.System]
 		var err error
 		if machines == nil {
-			if machines, err = (models.Machine{}.Query(&models.Query{System: t.System})); err != nil {
+			if machines, err = (dao.Machine{}.Query(&dao.Query{System: t.System})); err != nil {
 				return ginp.ErrorResponse(http.StatusInternalServerError, err)
 			}
 			machinesList[t.System] = machines
 		}
 		st := storages[t.Storage]
 		if st == nil {
-			if st, err = (models.Storage{}.Get(t.Storage)); err != nil {
+			if st, err = (dao.Storage{}.Get(t.Storage)); err != nil {
 				return ginp.ErrorResponse(http.StatusInternalServerError, err)
 			}
 			storages[t.Storage] = st

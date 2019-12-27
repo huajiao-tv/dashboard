@@ -1,70 +1,94 @@
 package models
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/huajiao-tv/dashboard/dao"
-	"github.com/youlu-cn/ginp"
 )
 
 type Queue struct {
-	ginp.Model
-	Name       string `binding:"required" json:"name" gorm:"unique_index"`
-	Describe   string `binding:"required" json:"desc" gorm:"column:description"`
-	Password   string `binding:"required" json:"password"`
-	TopicCount int    `json:"topics"`
-
-	// operator
-	Comment  string `binding:"required" json:"comment"`
-	Operator string `json:"author"`
 }
 
-func (m Queue) TableName() string {
-	return "queue"
+func NewQueue() *Queue {
+	return &Queue{}
 }
 
-func (m Queue) Create() error {
-	return dao.DB.Create(&m).Error
+type ImportQueueResItem struct {
+	Queue string `json:"queue"`
+	Topic string `json:"topic"`
+	Res   string `json:"res"`
 }
 
-func (m Queue) Query(query *Query) (v []*Queue, err error) {
-	db := dao.DB.Model(&m).Find(&v)
-	return v, db.Error
-}
-
-func (m Queue) Delete() (err error) {
-	return dao.DB.Delete(&m).Error
-}
-
-func (m Queue) Get(id uint64) (v *Queue, err error) {
-	db := dao.DB.Model(&m).Where("id = ?", id).First(&m)
-	return &m, db.Error
-}
-
-func (m Queue) GetByName(name string) (v *Queue, err error) {
-	db := dao.DB.Model(&m).Where("name = ?", name).First(&m)
-	return &m, db.Error
-}
-
-func (m Queue) Update() error {
-	return dao.DB.Save(&m).Error
-}
-
-func (m Queue) FindAllByNames(names []string) ([]*Queue, error) {
-	var v []*Queue
-	db := dao.DB.Model(&m).Where("name in (?)", names).Find(&v)
-	return v, db.Error
-}
-
-func (m Queue) FindBlankQueue() ([]*Queue, error) {
-	var v []*Queue
-	db := dao.DB.Model(&m).Where("topic_count = ?", 0).Find(&v)
-	return v, db.Error
-}
-
-func (m Queue) FindAllByIds(ids []int) ([]*Queue, error) {
-	var v []*Queue
-	db := dao.DB.Model(&m).Where("id in (?)", ids).Find(&v)
-	if db.Error != nil {
-		return nil, db.Error
+func (m Queue) ImportQueue(qItem dao.TransModelQueue, operator string) []ImportQueueResItem {
+	var res []ImportQueueResItem
+	_, err := dao.Queue{}.GetByName(qItem.Name)
+	if err != nil {
+		queue := &dao.Queue{
+			Name:     qItem.Name,
+			Describe: qItem.Desc,
+			Password: qItem.Password,
+			Comment:  qItem.Comment,
+			Operator: operator,
+		}
+		if err = queue.Create(); err != nil {
+			return append(res, ImportQueueResItem{Queue: qItem.Name, Res: fmt.Sprintf("create queue error: %v", err)})
+		}
+		res = append(res, ImportQueueResItem{Queue: qItem.Name, Res: "success"})
+	} else {
+		res = append(res, ImportQueueResItem{Queue: qItem.Name, Res: "already exists"})
 	}
-	return v, nil
+
+	for _, tItem := range qItem.Topics {
+		rItem := m.ImportTopic(qItem, tItem, operator)
+		res = append(res, rItem)
+	}
+	return res
+}
+
+func (m Queue) ImportTopic(qItem dao.TransModelQueue, tItem dao.TransModelTopic, operator string) ImportQueueResItem {
+	var topic dao.Topic
+	rItem := ImportQueueResItem{
+		Queue: qItem.Name,
+		Topic: tItem.Name,
+	}
+	// check if exists
+	err := topic.FindOne(map[string]string{"queue": tItem.Queue, "name": tItem.Name})
+	if err == nil {
+		rItem.Res = "already exists"
+		return rItem
+	}
+
+	// check system and storage
+	var s dao.Storage
+	err = s.FindOne(map[string]string{"system": tItem.System, "host": tItem.Storage.Host, "port": tItem.Storage.Port})
+	if err != nil {
+		rItem.Res = fmt.Sprintf("search storage(%s:%s:%s) error: %v", tItem.System, tItem.Storage.Host, tItem.Storage.Port, err)
+		return rItem
+	}
+
+	// save to db
+	topic.Name = tItem.Name
+	topic.Queue = tItem.Queue
+	topic.Describe = tItem.Desc
+	topic.Password = tItem.Password
+	topic.ConsumeFile = tItem.Consume
+	topic.Comment = tItem.Comment
+	topic.System = tItem.System
+
+	topic.Operator = operator
+	topic.Storage = s.ID
+	status, err := strconv.ParseUint(tItem.Status, 10, 8)
+	if err != nil {
+		rItem.Res = fmt.Sprintf("convert status error: %v", err)
+		return rItem
+	}
+	topic.Status = uint8(status)
+	err = topic.Create()
+	if err != nil {
+		rItem.Res = fmt.Sprintf("save topic error: %v", err)
+		return rItem
+	}
+	rItem.Res = "success"
+	return rItem
 }

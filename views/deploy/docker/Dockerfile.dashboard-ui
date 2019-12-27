@@ -1,0 +1,13 @@
+####
+# 编译镜像
+####
+FROM node
+
+COPY ./ /dashboard-ui
+COPY ./deploy/docker/start.sh /
+
+WORKDIR /dashboard-ui
+
+RUN npm install --registry=https://registry.npm.taobao.org
+
+CMD ["bash", "/start.sh"]

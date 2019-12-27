@@ -10,8 +10,14 @@ import (
 )
 
 type TopicMachineMetricsCollect struct {
-	sync.RWMutex
-	m map[string]*TopicMachineMetric
+	mu      sync.RWMutex
+	metrics map[string]*TopicMachineMetric
+}
+
+func newTopicMachineMetricsCollect() *TopicMachineMetricsCollect {
+	return &TopicMachineMetricsCollect{
+		metrics: make(map[string]*TopicMachineMetric),
+	}
 }
 
 type TopicMachineMetric struct {
@@ -27,23 +33,23 @@ type TopicMachineMetric struct {
 }
 
 func (s TopicMachineMetricsCollect) GetMetrics() map[string]*TopicMachineMetric {
-	s.RLock()
-	defer s.RUnlock()
-	return s.m
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.metrics
 }
 
 func (s TopicMachineMetricsCollect) Get(queue, topic, node string) *TopicMachineMetric {
 	key := fmt.Sprintf("%v/%v-%v", queue, topic, node)
-	s.RLock()
-	data, ok := s.m[key]
-	s.RUnlock()
+	s.mu.RLock()
+	data, ok := s.metrics[key]
+	s.mu.RUnlock()
 	if ok {
 		return data
 	}
 	return &TopicMachineMetric{Node: node}
 }
 
-func (s TopicMachineMetricsCollect) GetMetric() map[string]*TopicMachineMetric {
+func (s TopicMachineMetricsCollect) getMetric() map[string]*TopicMachineMetric {
 	data := make(map[string]*TopicMachineMetric)
 	nodes, err := keeper.GetNodeList()
 	if err != nil {
@@ -122,15 +128,15 @@ func (s TopicMachineMetricsCollect) GetMetric() map[string]*TopicMachineMetric {
 }
 
 func (s TopicMachineMetricsCollect) collect() {
-	data := s.GetMetric()
-	old := s.GetMetric()
+	data := s.getMetric()
+	old := s.getMetric()
 	for k, v := range data {
 		if oldV := old[k]; oldV != nil {
 			v.SuccQpm = v.Succ - oldV.Succ
 			v.FailQpm = v.Fail - oldV.Fail
 		}
 	}
-	s.Lock()
-	s.m = data
-	s.Unlock()
+	s.mu.Lock()
+	s.metrics = data
+	s.mu.Unlock()
 }
