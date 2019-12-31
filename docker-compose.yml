@@ -1,8 +1,80 @@
 version: '3'
 
 services:
-  dashboard:
-    image: dashboard
-    build: .
+
+  redis:
+    image: redis:4-alpine
     ports:
-    - 8360:80
+      - 6379
+
+  postgres:
+    image: postgres:9.6
+    ports:
+      - 5432
+    environment:
+      POSTGRES_DB: dashboard
+      POSTGRES_USER: dashboard
+      POSTGRES_PASSWORD: huajiao.tv-123
+
+  peppercron:
+    image: huajiao/peppercron
+    entrypoint:
+      [
+        "/bin/sh", "-c",
+        "/data/peppercron/peppercron -e http://gokeeper_etcd:2379 -n $$HOSTNAME",
+      ]
+    ports:
+      - 12306
+      - 12307
+    depends_on:
+      - redis
+      - postgres
+      - gokeeper_etcd
+
+#  php-fpm:
+#    image: huajiao/php-fpm
+#
+#  pepperbus:
+#    image: huajiao/pepperbus
+#    command:
+#      [
+#        "-n", "pepperbus:19840",
+#        "-d", "pepperbus-test",
+#        "-k", "gokeeper:7000",
+#      ]
+#    ports:
+#      - 12017
+#      - 19840
+#    depends_on:
+#      - redis
+#      - gokeeper
+
+  dashboard:
+    image: huajiao/dashboard
+    ports:
+      - 8360:80
+    depends_on:
+      - redis
+      - postgres
+      - gokeeper
+      - peppercron
+
+  gokeeper_etcd:
+    image: quay.io/coreos/etcd:v3.3.18
+    ports:
+      - 2379
+      - 2380
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://0.0.0.0:2379
+
+  gokeeper:
+    image: huajiao/gokeeper
+    ports:
+      - 7000
+      - 7001
+      - 17000
+      - 17001
+    depends_on:
+      - gokeeper_etcd

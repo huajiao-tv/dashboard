@@ -1,3 +1,12 @@
+<p align="center">
+    <a href="https://hub.docker.com/r/huajiao/dashboard" alt="Activity">
+        <img src="https://img.shields.io/docker/cloud/automated/huajiao/dashboard.svg" /></a>
+    <a href="https://hub.docker.com/r/huajiao/gokeeper" alt="Activity">
+        <img src="https://img.shields.io/docker/cloud/build/huajiao/dashboard.svg" /></a>
+    <img src="https://img.shields.io/github/license/huajiao-tv/dashboard.svg" />
+</p>
+
+
 # dashboard - [pepperbus](https://github.com/huajiao-tv/pepperbus) & [peppercron](https://github.com/huajiao-tv/peppercron) 后台
 
 ## 添加系统
