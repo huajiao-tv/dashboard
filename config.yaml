@@ -9,11 +9,11 @@ ldap:
   enable: true
   address: ldap:389
   base-dn: ""
-postgres:
-  host: postgres
-  port: 5432
+mysql:
+  host: mysql
+  port: 3306
   database: dashboard
-  username: dashboard
+  username: root
   password: huajiao.tv-123
 redis:
   host: redis

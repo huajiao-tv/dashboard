@@ -29,10 +29,10 @@ func (m System) TableName() string {
 }
 
 func (m System) Create() error {
-	return config.Postgres.Create(&m).Error
+	return config.MySQL.Create(&m).Error
 }
 
 func (m System) Query(_ *Query) (v []*System, err error) {
-	db := config.Postgres.Model(&m).Find(&v)
+	db := config.MySQL.Model(&m).Find(&v)
 	return v, db.Error
 }

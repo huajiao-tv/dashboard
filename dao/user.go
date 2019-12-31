@@ -36,11 +36,11 @@ func (m User) TableName() string {
 }
 
 func (m User) Create() error {
-	return config.Postgres.Create(&m).Error
+	return config.MySQL.Create(&m).Error
 }
 
 func (m User) Get() (v *User, err error) {
-	db := config.Postgres.Model(&m).Where("name = ?", m.Name).First(&m)
+	db := config.MySQL.Model(&m).Where("name = ?", m.Name).First(&m)
 	if db.RecordNotFound() {
 		return nil, UserNotExist
 	} else {
@@ -48,7 +48,7 @@ func (m User) Get() (v *User, err error) {
 	}
 }
 func (m User) GetByID() (v *User, err error) {
-	db := config.Postgres.Model(&m).Where("id = ?", m.ID).First(&m)
+	db := config.MySQL.Model(&m).Where("id = ?", m.ID).First(&m)
 	if db.RecordNotFound() {
 		return nil, UserNotExist
 	} else {
@@ -74,7 +74,7 @@ func CheckPermission(u interface{}, sys string) bool {
 	return false
 }
 func SearchUser(keyword string) (v []*User, err error) {
-	db := config.Postgres.Model(&User{}).Where("name like ?", "%"+keyword+"%").Find(&v)
+	db := config.MySQL.Model(&User{}).Where("name like ?", "%"+keyword+"%").Find(&v)
 	for _, vv := range v {
 		vv.Password = ""
 	}
@@ -82,9 +82,9 @@ func SearchUser(keyword string) (v []*User, err error) {
 }
 
 func (m User) Delete() (err error) {
-	return config.Postgres.Delete(&m).Error
+	return config.MySQL.Delete(&m).Error
 }
 
 func (m User) Update() error {
-	return config.Postgres.Save(&m).Error
+	return config.MySQL.Save(&m).Error
 }

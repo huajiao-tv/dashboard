@@ -20,10 +20,10 @@ func (TaskTest) TableName() string {
 }
 
 func (m TaskTest) Create() error {
-	return config.Postgres.Create(&m).Error
+	return config.MySQL.Create(&m).Error
 }
 
 func (m TaskTest) Get(id uint64) *TaskTest {
-	config.Postgres.Model(&m).Where("task_id = ?", id).Order("id desc").First(&m)
+	config.MySQL.Model(&m).Where("task_id = ?", id).Order("id desc").First(&m)
 	return &m
 }

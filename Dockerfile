@@ -23,7 +23,8 @@ RUN rm -rf node_modules && cnpm install && cnpm run build
 FROM alpine:3.9
 
 # replace update source
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+    && mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 # install nginx
 RUN apk update && apk add nginx && mkdir -p /run/nginx/
@@ -32,10 +33,10 @@ RUN apk update && apk add nginx && mkdir -p /run/nginx/
 COPY --from=0 /go/src/github.com/huajiao-tv/dashboard/dashboard /data/dashboard/bin/dashboard
 
 # dashboard ui
-COPY --from=1 /data/views/dist /usr/local/nginx/html
+COPY --from=1 /data/views/dist /var/lib/nginx/html
 
 # nginx conf
-COPY ./deploy/nginx/nginx.conf /usr/local/nginx/conf/nginx.conf
+COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 # dashboard conf
 COPY ./config.yaml /etcd/dashboard.yaml
@@ -44,4 +45,4 @@ COPY ./deploy/run.sh /run.sh
 
 EXPOSE 80
 
-CMD ["bash", "/run.sh"]
+CMD ["sh", "/run.sh"]

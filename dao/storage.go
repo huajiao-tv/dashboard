@@ -31,7 +31,7 @@ func (m Storage) TableName() string {
 }
 
 func (m Storage) Create() (err error) {
-	tx := config.Postgres.Begin()
+	tx := config.MySQL.Begin()
 	if err = tx.Error; err != nil {
 		return
 	}
@@ -52,16 +52,16 @@ Rollback:
 }
 
 func (m Storage) Update() error {
-	return config.Postgres.Save(&m).Error
+	return config.MySQL.Save(&m).Error
 }
 
 func (m Storage) Get(id uint64) (v *Storage, err error) {
-	db := config.Postgres.Model(&m).Where("id = ?", id).First(&m)
+	db := config.MySQL.Model(&m).Where("id = ?", id).First(&m)
 	return &m, db.Error
 }
 
 func (m Storage) Query(query *Query) (v []*Storage, err error) {
-	db := config.Postgres.Model(&m)
+	db := config.MySQL.Model(&m)
 	if query.System != "" {
 		db = db.Where("system = ?", query.System)
 	}
@@ -70,7 +70,7 @@ func (m Storage) Query(query *Query) (v []*Storage, err error) {
 }
 
 func (m *Storage) FindOne(query map[string]string) error {
-	db := config.Postgres.Model(&m)
+	db := config.MySQL.Model(&m)
 	for _, k := range []string{"system", "host", "port"} {
 		if v, ok := query[k]; ok {
 			db = db.Where(k+" = ?", v)
@@ -81,6 +81,6 @@ func (m *Storage) FindOne(query map[string]string) error {
 }
 
 func (m Storage) FindAll() (v []*Storage, err error) {
-	db := config.Postgres.Model(&m).Where("status = ?", 0).Find(&v)
+	db := config.MySQL.Model(&m).Where("status = ?", 0).Find(&v)
 	return v, db.Error
 }

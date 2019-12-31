@@ -17,9 +17,6 @@ func init() {
 }
 
 func main() {
-	// Initialize database connections
-	dao.Init()
-
 	// Initialize database models
 	dao.Init()
 

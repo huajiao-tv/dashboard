@@ -10,8 +10,8 @@ import (
 )
 
 func TaskTestClear() {
-	var testTasks []dao.TaskTest
-	config.Postgres.Where("status<?", 3).Find(testTasks)
+	var testTasks []*dao.TaskTest
+	config.MySQL.Where("status<?", 3).Find(&testTasks)
 	for _, val := range testTasks {
 		if val.CreatedAt.Add(300 * time.Second).Before(time.Now()) {
 			task := new(dao.Task)
@@ -19,7 +19,7 @@ func TaskTestClear() {
 				continue
 			}
 			_ = models.NewTask().StopTask(task)
-			config.Postgres.Model(&val).Updates(dao.TaskTest{Status: 3})
+			config.MySQL.Model(&val).Updates(dao.TaskTest{Status: 3})
 		}
 	}
 }

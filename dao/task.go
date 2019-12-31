@@ -48,7 +48,7 @@ func (t *Task) GetEtcdJobName() string {
 }
 
 func (t *Task) Create() error {
-	tx := config.Postgres.Begin()
+	tx := config.MySQL.Begin()
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -68,17 +68,17 @@ func (t *Task) Create() error {
 }
 
 func (t *Task) Get(id int64) *Task {
-	config.Postgres.Where("id=?", id).First(t)
+	config.MySQL.Where("id=?", id).First(t)
 	return t
 }
 
 func (t *Task) Query() (v []*Task, err error) {
-	db := config.Postgres.Model(t).Find(&v)
+	db := config.MySQL.Model(t).Find(&v)
 	return v, db.Error
 }
 
 func (t *Task) Update() error {
-	tx := config.Postgres.Begin()
+	tx := config.MySQL.Begin()
 	err := tx.Save(t).Error
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func (t *Task) Update() error {
 
 func (t Task) GetAllWork() []*Task {
 	var tasks []*Task
-	config.Postgres.Where("status=? or status=?", TaskWorking, TaskStop).Find(&tasks)
+	config.MySQL.Where("status=? or status=?", TaskWorking, TaskStop).Find(&tasks)
 	return tasks
 }
 
@@ -124,7 +124,7 @@ func (t *Task) GetDepends() []string {
 	_ = json.Unmarshal([]byte(t.DependOn), &depends)
 	for _, val := range depends {
 		task := new(Task)
-		config.Postgres.Where("id=?", val["value"].(float64)).First(task)
+		config.MySQL.Where("id=?", val["value"].(float64)).First(task)
 		ret = append(ret, task.GetEtcdJobName())
 
 	}
@@ -135,7 +135,7 @@ func (t *Task) GetDepends() []string {
 	}
 	for _, val := range children {
 		task := new(Task)
-		config.Postgres.Where("id=?", val["value"].(float64)).First(task)
+		config.MySQL.Where("id=?", val["value"].(float64)).First(task)
 		ret = append(ret, task.GetEtcdJobName())
 	}
 	return ret
@@ -148,7 +148,7 @@ func (t *Task) getChildren() (ret []*Task) {
 	}
 	for _, val := range cs {
 		task := new(Task)
-		config.Postgres.Where("name=?", val).First(task)
+		config.MySQL.Where("name=?", val).First(task)
 		if task.ID == 0 {
 			continue
 		}

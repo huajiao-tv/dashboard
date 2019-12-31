@@ -7,11 +7,11 @@ import (
 	"github.com/etcd-io/etcd/clientv3"
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 var (
-	Postgres    *gorm.DB
+	MySQL       *gorm.DB
 	ETCDClient  *clientv3.Client
 	RedisClient redis.Cmdable
 )
@@ -31,8 +31,8 @@ type ETCD struct {
 }
 
 func (m Database) String() string {
-	return fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
-		m.Host, m.Port, m.User, m.Name, m.Password)
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
+		m.User, m.Password, m.Host, m.Port, m.Name)
 }
 
 type Redis struct {
@@ -58,7 +58,7 @@ func InitDBs() {
 	timer := time.NewTimer(time.Minute * 2)
 	defer timer.Stop()
 
-	// Postgres
+	// MySQL
 	for {
 		select {
 		case <-timer.C:
@@ -66,7 +66,7 @@ func InitDBs() {
 		default:
 		}
 
-		Postgres, err = gorm.Open("postgres", GlobalConfig.Postgres.String())
+		MySQL, err = gorm.Open("mysql", GlobalConfig.MySQL.String())
 		if err != nil {
 			time.Sleep(time.Second * 10)
 			continue

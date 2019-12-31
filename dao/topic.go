@@ -42,7 +42,7 @@ func (m Topic) TableName() string {
 }
 
 func (m Topic) Create() (err error) {
-	tx := config.Postgres.Begin()
+	tx := config.MySQL.Begin()
 	if err = tx.Error; err != nil {
 		return
 	}
@@ -67,7 +67,7 @@ Rollback:
 }
 
 func (m Topic) Delete() (err error) {
-	tx := config.Postgres.Begin()
+	tx := config.MySQL.Begin()
 	if err = tx.Error; err != nil {
 		return
 	}
@@ -92,16 +92,16 @@ Rollback:
 }
 
 func (m Topic) Update() error {
-	return config.Postgres.Save(&m).Error
+	return config.MySQL.Save(&m).Error
 }
 
 func (m Topic) Get(id uint64) (v *Topic, err error) {
-	db := config.Postgres.Model(&m).Where("id = ?", id).First(&m)
+	db := config.MySQL.Model(&m).Where("id = ?", id).First(&m)
 	return &m, db.Error
 }
 
 func (m Topic) Query(query *Query) (v []*Topic, err error) {
-	db := config.Postgres.Model(&m)
+	db := config.MySQL.Model(&m)
 	if query.System != "" {
 		db = db.Where("system = ?", query.System)
 	}
@@ -114,13 +114,13 @@ func (m Topic) Query(query *Query) (v []*Topic, err error) {
 }
 
 func (m Topic) Search(system, queue, topic string, con string) (v []*Topic, err error) {
-	db := config.Postgres.Model(&m).Where("(system like ? and queue like ?) "+con+" name like ?", "%"+system+"%", queue, topic).Limit(100)
+	db := config.MySQL.Model(&m).Where("(system like ? and queue like ?) "+con+" name like ?", "%"+system+"%", queue, topic).Limit(100)
 	db = db.Find(&v)
 	return v, db.Error
 }
 
 func (m *Topic) FindOne(query map[string]string) error {
-	db := config.Postgres.Model(&m)
+	db := config.MySQL.Model(&m)
 	for _, k := range []string{"queue", "name"} {
 		if v, ok := query[k]; ok {
 			db = db.Where(k+" = ?", v)
@@ -134,7 +134,7 @@ func (m Topic) FindAllByQueues(queueNames []string) ([]TransModelTopic, error) {
 	var v []TransModelTopic
 	sql := `select t.system, t.queue, t.name, t.description, t.password, t.consume_file, t.comment, t.status, s.type,s.host,s.port
 			from topic as t left join storage as s on t.storage=s.id where queue in (?)`
-	rows, err := config.Postgres.Raw(sql, queueNames).Rows()
+	rows, err := config.MySQL.Raw(sql, queueNames).Rows()
 	if err != nil {
 		return nil, err
 	}

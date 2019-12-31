@@ -7,14 +7,14 @@ services:
     ports:
       - 6379
 
-  postgres:
-    image: postgres:9.6
+  mysql:
+    image: mysql:5.6
     ports:
-      - 5432
+      - 3306
     environment:
-      POSTGRES_DB: dashboard
-      POSTGRES_USER: dashboard
-      POSTGRES_PASSWORD: huajiao.tv-123
+      - LANG=C.UTF-8
+      - MYSQL_DATABASE=dashboard
+      - MYSQL_ROOT_PASSWORD=huajiao.tv-123
 
   peppercron:
     image: huajiao/peppercron
@@ -28,7 +28,7 @@ services:
       - 12307
     depends_on:
       - redis
-      - postgres
+      - mysql
       - gokeeper_etcd
 
 #  php-fpm:
@@ -51,11 +51,14 @@ services:
 
   dashboard:
     image: huajiao/dashboard
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - 8360:80
     depends_on:
       - redis
-      - postgres
+      - mysql
       - gokeeper
       - peppercron
 

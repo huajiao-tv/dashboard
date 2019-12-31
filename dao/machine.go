@@ -47,7 +47,7 @@ func (m Machine) Create() (err error) {
 	if m.Cron {
 		col = "cron_machine_count"
 	}
-	tx := config.Postgres.Begin()
+	tx := config.MySQL.Begin()
 	if err = tx.Error; err != nil {
 		return
 	}
@@ -74,7 +74,7 @@ func (m Machine) Delete() (err error) {
 	if m.Cron {
 		col = "cron_machine_count"
 	}
-	tx := config.Postgres.Begin()
+	tx := config.MySQL.Begin()
 	if err = tx.Error; err != nil {
 		return
 	}
@@ -95,12 +95,12 @@ Rollback:
 }
 
 func (m Machine) Get(id uint64) (v *Machine, err error) {
-	db := config.Postgres.Model(&m).Where("id = ?", id).First(&m)
+	db := config.MySQL.Model(&m).Where("id = ?", id).First(&m)
 	return &m, db.Error
 }
 
 func (m Machine) Query(query *Query) (v []*Machine, err error) {
-	db := config.Postgres.Table(m.TableName())
+	db := config.MySQL.Table(m.TableName())
 	if query.Keyword != "" {
 		db = db.Where("ip in (?)", strings.Split(query.Keyword, "\n"))
 	}

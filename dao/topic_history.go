@@ -44,5 +44,5 @@ func (m TopicHistory) CreateBatch(data map[string]*TopicHistory) error {
 	}
 	sqlCmd := fmt.Sprintf("INSERT INTO %s (queue, topic, length, retry_length) VALUES %s",
 		m.TableName(), strings.Join(valStrings, ","))
-	return config.Postgres.Exec(sqlCmd, vals...).Error
+	return config.MySQL.Exec(sqlCmd, vals...).Error
 }

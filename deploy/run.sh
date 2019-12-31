@@ -1,4 +1,4 @@
 #!/bin/sh
 
-/usr/local/nginx/sbin/nginx
+/usr/sbin/nginx
 /data/dashboard/bin/dashboard -e=test -cfg=/etcd/dashboard.yaml

@@ -36,7 +36,7 @@ func (JobResult) TableName() string {
 
 func (m JobResult) Get(name string) []*JobResult {
 	var v []*JobResult
-	config.Postgres.Model(&m).Where("job_name = ?", name).Order("id desc").Find(&v)
+	config.MySQL.Model(&m).Where("job_name = ?", name).Order("id desc").Find(&v)
 	return v
 }
 
@@ -45,7 +45,7 @@ func (m JobResult) Query(taskID uint64, node string, page int64, sort string, li
 	var count int
 
 	ti := time.Now().AddDate(0, 0, -7)
-	db := config.Postgres.Model(&m)
+	db := config.MySQL.Model(&m)
 	if search == "" {
 		db = db.Select("id,started_at,finished_at,output_data").
 			Where("started_at >= ? and agent_node=? and job_name=?", ti, node, taskID)
@@ -65,7 +65,7 @@ func (m JobResult) Query(taskID uint64, node string, page int64, sort string, li
 
 func (m JobResult) Count(taskID uint64, node, search string) (total int64) {
 	begin := time.Now().AddDate(0, 0, -7)
-	db := config.Postgres.Model(&m)
+	db := config.MySQL.Model(&m)
 	if search == "" {
 		db.Where("started_at >= ? and agent_node=? and job_name=?", begin, node, taskID).Count(&total)
 	} else {

@@ -85,44 +85,44 @@ func (r *RunType) String() string {
 }
 
 func Init() {
-	if !config.Postgres.HasTable(&User{}) {
-		config.Postgres.CreateTable(&User{})
+	if !config.MySQL.HasTable(&User{}) {
+		config.MySQL.CreateTable(&User{})
 	}
-	if !config.Postgres.HasTable(&System{}) {
-		config.Postgres.CreateTable(&System{})
-	}
-
-	if !config.Postgres.HasTable(&Queue{}) {
-		config.Postgres.CreateTable(&Queue{})
-	}
-	if !config.Postgres.HasTable(&QueueHistory{DataType: HourData}) {
-		config.Postgres.CreateTable(&QueueHistory{DataType: HourData})
-	}
-	//config.Postgres.CreateTable(&QueueHistory{DataType: DayData})
-	//config.Postgres.CreateTable(&QueueHistory{DataType: MonthData})
-
-	if !config.Postgres.HasTable(&Machine{}) {
-		config.Postgres.CreateTable(&Machine{})
-	}
-	if !config.Postgres.HasTable(&Machine{Cron: true}) {
-		config.Postgres.CreateTable(&Machine{Cron: true})
+	if !config.MySQL.HasTable(&System{}) {
+		config.MySQL.CreateTable(&System{})
 	}
 
-	if !config.Postgres.HasTable(&Topic{}) {
-		config.Postgres.CreateTable(&Topic{})
+	if !config.MySQL.HasTable(&Queue{}) {
+		config.MySQL.CreateTable(&Queue{})
 	}
-	if !config.Postgres.HasTable(&TopicHistory{DataType: HourData}) {
-		config.Postgres.CreateTable(&TopicHistory{DataType: HourData})
+	if !config.MySQL.HasTable(&QueueHistory{DataType: HourData}) {
+		config.MySQL.CreateTable(&QueueHistory{DataType: HourData})
+	}
+	//config.MySQL.CreateTable(&QueueHistory{DataType: DayData})
+	//config.MySQL.CreateTable(&QueueHistory{DataType: MonthData})
+
+	if !config.MySQL.HasTable(&Machine{}) {
+		config.MySQL.CreateTable(&Machine{})
+	}
+	if !config.MySQL.HasTable(&Machine{Cron: true}) {
+		config.MySQL.CreateTable(&Machine{Cron: true})
 	}
 
-	if !config.Postgres.HasTable(&Storage{}) {
-		config.Postgres.CreateTable(&Storage{})
+	if !config.MySQL.HasTable(&Topic{}) {
+		config.MySQL.CreateTable(&Topic{})
 	}
-	if !config.Postgres.HasTable(&Task{}) {
-		config.Postgres.CreateTable(&Task{})
+	if !config.MySQL.HasTable(&TopicHistory{DataType: HourData}) {
+		config.MySQL.CreateTable(&TopicHistory{DataType: HourData})
 	}
-	if !config.Postgres.HasTable(&TaskTest{}) {
-		config.Postgres.CreateTable(&TaskTest{})
+
+	if !config.MySQL.HasTable(&Storage{}) {
+		config.MySQL.CreateTable(&Storage{})
+	}
+	if !config.MySQL.HasTable(&Task{}) {
+		config.MySQL.CreateTable(&Task{})
+	}
+	if !config.MySQL.HasTable(&TaskTest{}) {
+		config.MySQL.CreateTable(&TaskTest{})
 	}
 
 	if len(config.GlobalConfig.Dashboard.AdminPassword) > 0 {

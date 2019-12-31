@@ -22,47 +22,47 @@ func (m Queue) TableName() string {
 }
 
 func (m Queue) Create() error {
-	return config.Postgres.Create(&m).Error
+	return config.MySQL.Create(&m).Error
 }
 
 func (m Queue) Query(query *Query) (v []*Queue, err error) {
-	db := config.Postgres.Model(&m).Find(&v)
+	db := config.MySQL.Model(&m).Find(&v)
 	return v, db.Error
 }
 
 func (m Queue) Delete() (err error) {
-	return config.Postgres.Delete(&m).Error
+	return config.MySQL.Delete(&m).Error
 }
 
 func (m Queue) Get(id uint64) (v *Queue, err error) {
-	db := config.Postgres.Model(&m).Where("id = ?", id).First(&m)
+	db := config.MySQL.Model(&m).Where("id = ?", id).First(&m)
 	return &m, db.Error
 }
 
 func (m Queue) GetByName(name string) (v *Queue, err error) {
-	db := config.Postgres.Model(&m).Where("name = ?", name).First(&m)
+	db := config.MySQL.Model(&m).Where("name = ?", name).First(&m)
 	return &m, db.Error
 }
 
 func (m Queue) Update() error {
-	return config.Postgres.Save(&m).Error
+	return config.MySQL.Save(&m).Error
 }
 
 func (m Queue) FindAllByNames(names []string) ([]*Queue, error) {
 	var v []*Queue
-	db := config.Postgres.Model(&m).Where("name in (?)", names).Find(&v)
+	db := config.MySQL.Model(&m).Where("name in (?)", names).Find(&v)
 	return v, db.Error
 }
 
 func (m Queue) FindBlankQueue() ([]*Queue, error) {
 	var v []*Queue
-	db := config.Postgres.Model(&m).Where("topic_count = ?", 0).Find(&v)
+	db := config.MySQL.Model(&m).Where("topic_count = ?", 0).Find(&v)
 	return v, db.Error
 }
 
 func (m Queue) FindAllByIds(ids []int) ([]*Queue, error) {
 	var v []*Queue
-	db := config.Postgres.Model(&m).Where("id in (?)", ids).Find(&v)
+	db := config.MySQL.Model(&m).Where("id in (?)", ids).Find(&v)
 	if db.Error != nil {
 		return nil, db.Error
 	}

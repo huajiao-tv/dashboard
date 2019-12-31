@@ -36,7 +36,7 @@ type Config struct {
 	Dashboard Base     `yaml:"dashboard"`
 	Keeper    Keeper   `yaml:"gokeeper"`
 	LDAP      LDAP     `yaml:"ldap"`
-	Postgres  Database `yaml:"postgres"`
+	MySQL     Database `yaml:"mysql"`
 	Redis     Redis    `yaml:"redis"`
 	ETCD      ETCD     `yaml:"etcd"`
 }
@@ -47,7 +47,7 @@ var (
 )
 
 var (
-	GlobalConfig *Config
+	GlobalConfig Config
 	HttpClient   = &http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
@@ -71,7 +71,7 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	if err = yaml.Unmarshal(cfg, GlobalConfig); err != nil {
+	if err = yaml.Unmarshal(cfg, &GlobalConfig); err != nil {
 		panic(err)
 	}
 
