@@ -47,7 +47,7 @@ func (s *RedisStateCollect) GetAll() []*RedisStatus {
 	return states
 }
 
-func (s *RedisStateCollect) update() {
+func (s *RedisStateCollect) Update() {
 	storages, err := dao.Storage{}.FindAll()
 	if err != nil {
 		log.Println("get storage list failed:", err)
@@ -75,8 +75,6 @@ func (s *RedisStateCollect) update() {
 }
 
 func (s *RedisStateCollect) collect() {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 	states := make(map[string]*RedisStatus, len(s.clients))
 
 	for key, cli := range s.clients {
@@ -90,4 +88,8 @@ func (s *RedisStateCollect) collect() {
 		}
 		states[key] = state
 	}
+
+	s.mu.Lock()
+	s.states = states
+	s.mu.Unlock()
 }

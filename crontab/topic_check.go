@@ -18,7 +18,9 @@ type TopicScriptsStatusCheck struct {
 }
 
 func newTopicScriptsStatusCheck() *TopicScriptsStatusCheck {
-	return &TopicScriptsStatusCheck{}
+	return &TopicScriptsStatusCheck{
+		data: make(map[string]interface{}),
+	}
 }
 
 func (s *TopicScriptsStatusCheck) Get(queue, topic, node string) string {

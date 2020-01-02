@@ -43,6 +43,7 @@ func (c StorageController) AddHandlerPostAction(req *ginp.Request) *ginp.Respons
 	if err := storage.Create(); err != nil {
 		return ginp.ErrorResponse(http.StatusInternalServerError, err)
 	}
+	crontab.RedisState.Update()
 	return ginp.DataResponse(storage)
 }
 

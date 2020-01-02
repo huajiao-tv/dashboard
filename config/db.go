@@ -75,6 +75,10 @@ func InitDBs() {
 		break
 	}
 
+	MySQL.LogMode(true)
+	MySQL.Set("gorm:table_options", "charset=utf8")
+	MySQL.DB().SetConnMaxLifetime(time.Second * 10)
+
 	// Redis
 	RedisClient = redis.NewClient(GlobalConfig.Redis.Options())
 	// Etcd

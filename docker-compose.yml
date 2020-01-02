@@ -31,23 +31,23 @@ services:
       - mysql
       - gokeeper_etcd
 
-#  php-fpm:
-#    image: huajiao/php-fpm
-#
-#  pepperbus:
-#    image: huajiao/pepperbus
-#    command:
-#      [
-#        "-n", "pepperbus:19840",
-#        "-d", "pepperbus-test",
-#        "-k", "gokeeper:7000",
-#      ]
-#    ports:
-#      - 12017
-#      - 19840
-#    depends_on:
-#      - redis
-#      - gokeeper
+  php-fpm:
+    image: huajiao/php-fpm
+    volumes:
+      - "./example/php:/data"
+
+  pepperbus:
+    image: huajiao/pepperbus
+    command:
+      [
+        "/bin/sh", "-c",
+        "/data/pepperbus/pepperbus -n pepperbus:19840 -d pepperbus-test -k gokeeper:7000 -kd gokeeper:7001",
+      ]
+    ports:
+      - 12017
+      - 19840
+    depends_on:
+      - gokeeper
 
   dashboard:
     image: huajiao/dashboard
@@ -79,5 +79,9 @@ services:
       - 7001
       - 17000
       - 17001
+    environment:
+      - DEFAULT_CLUSTER=pepperbus-test
+    volumes:
+      - "./deploy/gokeeper/pepperbus-test:/tmp/gokeeper/init/pepperbus-test"
     depends_on:
       - gokeeper_etcd

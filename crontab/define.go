@@ -16,12 +16,6 @@ import (
 	"github.com/robfig/cron"
 )
 
-const (
-	MaxIdle        = 10
-	DialTimeout    = time.Second * 3
-	ConnectTimeout = time.Second * 5
-)
-
 var (
 	RedisState          = newRedisStateCollect()
 	TaskState           = newTaskStatusCollect()
@@ -34,7 +28,7 @@ var (
 
 func Init() {
 	c := cron.New()
-	c.AddFunc("@every 1m", RedisState.update)
+	c.AddFunc("@every 1m", RedisState.Update)
 	c.AddFunc("@every 10s", RedisState.collect)
 	c.AddFunc("@every 1m", QueueCollectStats.collect)
 	c.AddFunc("@every 1m", TopicLengthStats.collect)
