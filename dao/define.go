@@ -124,6 +124,9 @@ func Init() {
 	if !config.MySQL.HasTable(&TaskTest{}) {
 		config.MySQL.CreateTable(&TaskTest{})
 	}
+	if !config.MySQL.HasTable(&JobResult{}) {
+		config.MySQL.CreateTable(&JobResult{})
+	}
 
 	if len(config.GlobalConfig.Dashboard.AdminPassword) > 0 {
 		u := User{

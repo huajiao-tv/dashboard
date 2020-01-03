@@ -53,9 +53,13 @@ func (s *TaskStatusCollect) collect() {
 			_ = val.Update()
 		}
 
+		nodes := map[string]interface{}{}
+		if dispatch["running_agents"] != nil {
+			nodes = dispatch["running_agents"].(map[string]interface{})
+		}
 		detail := &dao.TaskDetail{
 			Task:  val,
-			Nodes: dispatch["running_agents"].(map[string]interface{}),
+			Nodes: nodes,
 		}
 		for k, v := range detail.Nodes {
 			statics := models.NewTask().GetNodeWorkInfo(val, k)

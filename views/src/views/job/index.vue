@@ -175,7 +175,7 @@ export default {
   created() {
     this.initialize()
     // console.log(process.env.WEBSOCKET_URL)
-    var wsUrl = 'ws://' + window.location.hostname
+    var wsUrl = 'ws://' + window.location.host
     if (process.env.WEBSOCKET_URL !== '') {
       wsUrl = process.env.WEBSOCKET_URL
     }

@@ -68,6 +68,7 @@ func (c *Push) Run() {
 		sum := crontab.TaskState.GetSum()
 		if bytes.Compare(c.Hash, sum) == 0 {
 			time.Sleep(time.Second)
+			continue
 		}
 
 		msg, _ := json.Marshal(map[string]string{

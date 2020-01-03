@@ -19,5 +19,6 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/youlu-cn/ginp v0.0.0-20191226101237-1b2714a72f3c
 	github.com/youlu-cn/go-ldap v0.0.0-20190515043014-98a36176db8e
+	go.etcd.io/etcd v0.5.0-alpha.5.0.20190917205325-a14579fbfb1a
 	gopkg.in/yaml.v2 v2.2.7
 )

@@ -46,7 +46,7 @@ func (m Task) Add(task *dao.Task) error {
 		times = int64(0)
 	)
 
-	if err = json.Unmarshal([]byte(task.RunType), runType); err != nil {
+	if err = json.Unmarshal([]byte(task.RunType), &runType); err != nil {
 		return err
 	}
 	if runType.Type == 2 {
@@ -119,7 +119,7 @@ func (m Task) AddTest(task *dao.Task, username string) error {
 		return err
 	}
 
-	if err := json.Unmarshal([]byte(task.RunType), runType); err != nil {
+	if err := json.Unmarshal([]byte(task.RunType), &runType); err != nil {
 		return err
 	}
 	switch logic.ExecutorType(task.Executor) {

@@ -1,13 +1,17 @@
 package config
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/etcd-io/etcd/clientv3"
 	"github.com/go-redis/redis"
+	cronCfg "github.com/huajiao-tv/peppercron/config"
+	"github.com/huajiao-tv/peppercron/logic"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"go.etcd.io/etcd/clientv3"
 )
 
 var (
@@ -88,6 +92,31 @@ func InitDBs() {
 		Username:    GlobalConfig.ETCD.Username,
 		Password:    GlobalConfig.ETCD.Password,
 	})
+	if err != nil {
+		panic(err)
+	}
+
+	// Set peppercron global conf
+	cronGlobal := cronCfg.SettingGlobal{
+		FrontPort: cronCfg.DefaultFrontPort,
+		AdminPort: cronCfg.DefaultAdminPort,
+		JobResultTimesStorage: &cronCfg.SettingJobResultStorage{
+			Type:        "redis",
+			Addr:        fmt.Sprintf("%s:%d", GlobalConfig.Redis.Host, GlobalConfig.Redis.Port),
+			Auth:        GlobalConfig.Redis.Password,
+			MaxConnNum:  50,
+			IdleTimeout: time.Second * 30,
+		},
+		JobResultStorage: &cronCfg.SettingJobResultStorage{
+			Type:     "mysql",
+			Addr:     fmt.Sprintf("%s:%d", GlobalConfig.MySQL.Host, GlobalConfig.MySQL.Port),
+			Auth:     GlobalConfig.MySQL.Password,
+			User:     GlobalConfig.MySQL.User,
+			Database: GlobalConfig.MySQL.Name,
+		},
+	}
+	cfgVal, _ := json.Marshal(&cronGlobal)
+	_, err = ETCDClient.Put(context.TODO(), logic.GlobalConfig, string(cfgVal))
 	if err != nil {
 		panic(err)
 	}
