@@ -1,5 +1,5 @@
 # build dashboard
-FROM golang:1.13
+FROM golang:1.14
 
 ENV GO111MODULE=on
 

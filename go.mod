@@ -10,7 +10,7 @@ require (
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/google/go-querystring v1.0.0
 	github.com/gorilla/websocket v1.4.1
-	github.com/huajiao-tv/gokeeper v0.0.0-20191220092434-d6e6ebe3db06
+	github.com/huajiao-tv/gokeeper v0.0.0-20200407022642-05b60f4c831b
 	github.com/huajiao-tv/peppercron v0.0.0-20191226065308-a5e3ab6a1fda
 	github.com/jinzhu/gorm v1.9.11
 	github.com/pkg/errors v0.8.1
