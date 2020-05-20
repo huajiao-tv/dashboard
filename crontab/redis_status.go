@@ -56,7 +56,7 @@ func (s *RedisStateCollect) Update() {
 
 	s.mu.Lock()
 	for _, storage := range storages {
-		key := fmt.Sprintf("%v:%v:%v", storage.Host, storage.Port, storage.Password)
+		key := fmt.Sprintf("%v-%v:%v:%v", storage.System, storage.Host, storage.Port, storage.Password)
 		if _, ok := s.clients[key]; !ok {
 			cli := redis.NewClient(&redis.Options{
 				Addr:         fmt.Sprintf("%v:%v", storage.Host, storage.Port),
