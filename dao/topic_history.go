@@ -32,6 +32,10 @@ func (m TopicHistory) TableName() string {
 	}
 }
 
+func (m TopicHistory) GetQueueTopic() string {
+	return fmt.Sprintf("%v/%v", m.Queue, m.Topic)
+}
+
 func (m TopicHistory) CreateBatch(data map[string]*TopicHistory) error {
 	if len(data) == 0 {
 		return nil

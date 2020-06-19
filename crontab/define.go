@@ -24,6 +24,7 @@ var (
 	SystemJobExecStats  = newSystemJobExecCollect()
 	TopicScriptsStatus  = newTopicScriptsStatusCheck()
 	TopicMachineMetrics = newTopicMachineMetricsCollect()
+	TopicAlarmStats     = newTopicAlarmCollect()
 )
 
 func Init() {
@@ -37,6 +38,7 @@ func Init() {
 	c.AddFunc("@every 5m", TopicScriptsStatus.collect)
 	c.AddFunc("@every 1m", TaskState.collect)
 	c.AddFunc("@every 1m", TaskTestClear)
+	c.AddFunc("@every 1m", TopicAlarmStats.collect)
 
 	c.Start()
 }

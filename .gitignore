@@ -1,3 +1,7 @@
+# IDE
+.idea
+vendor/
+
 # Logs
 logs
 *.log

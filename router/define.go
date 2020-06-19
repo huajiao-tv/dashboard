@@ -20,6 +20,7 @@ func Init() {
 	_ = ginp.AddController(controllers.Topic)
 	_ = ginp.AddController(controllers.Storage)
 	_ = ginp.AddController(controllers.Task)
+	_ = ginp.AddController(controllers.Api)
 
 	//_ = ginp.AddController(controllers.Push)
 	ginp.Engine.GET("/push", controllers.Push.ListHandler)

@@ -21,14 +21,18 @@ func newTopicLengthCollect() *TopicLengthCollect {
 	}
 }
 
-func (s *TopicLengthCollect) Get(queue, topic string) *dao.TopicHistory {
-	key := fmt.Sprintf("%v/%v", queue, topic)
+func (s *TopicLengthCollect) GetByKey(key string) *dao.TopicHistory {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if data, ok := s.m[key]; ok {
 		return data
 	}
 	return &dao.TopicHistory{}
+}
+
+func (s *TopicLengthCollect) Get(queue, topic string) *dao.TopicHistory {
+	key := fmt.Sprintf("%v/%v", queue, topic)
+	return s.GetByKey(key)
 }
 
 func (s *TopicLengthCollect) collect() {
