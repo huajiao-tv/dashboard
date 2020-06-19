@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"fmt"
 	"github.com/huajiao-tv/dashboard/config"
 	"github.com/jinzhu/gorm"
 	"github.com/youlu-cn/ginp"
@@ -27,8 +28,8 @@ type Topic struct {
 	CgiConfig      string `json:"cgi_config" gorm:"default:'local'"`
 	Storage        uint64 `binding:"required" json:"storage"`
 	Status         uint8  `json:"status" gorm:"default:0"`
-	Alarm          int    `json:"alarm" gorm:"default:0"`
-	AlarmRetry     int    `json:"alarm_retry" gorm:"default:0"`
+	Alarm          int    `json:"alarm" gorm:"default:200"`
+	AlarmRetry     int    `json:"alarm_retry" gorm:"default:100"`
 	HttpConfig     string `json:"http_config" gorm:"default:''"`
 	TopicConfig    string `json:"topic_config" gorm:"default:''"`
 
@@ -39,6 +40,10 @@ type Topic struct {
 
 func (m Topic) TableName() string {
 	return "topic"
+}
+
+func (m Topic) GetQueueTopic() string {
+	return fmt.Sprintf("%v/%v", m.Queue, m.Name)
 }
 
 func (m Topic) Create() (err error) {
