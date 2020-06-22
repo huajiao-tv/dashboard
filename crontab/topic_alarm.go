@@ -27,7 +27,14 @@ func newTopicAlarmCollect() *TopicAlarmCollect {
 }
 
 func (s *TopicAlarmCollect) Range(f func(key string, entry *TopicAlarmEntry)) {
+	tmp := map[string]*TopicAlarmEntry{}
+	s.mu.RLock()
 	for k, v := range s.m {
+		tmp[k] = v
+	}
+	s.mu.RUnlock()
+
+	for k, v := range tmp {
 		f(k, v)
 	}
 }
