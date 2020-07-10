@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strings"
 	"sync"
 
 	"github.com/huajiao-tv/dashboard/keeper"
@@ -56,6 +57,7 @@ func (s *TopicMachineMetricsCollect) getMetric() map[string]*TopicMachineMetric 
 		log.Printf("CollectQueueStats getNodeList failed: %v", err)
 		return data
 	}
+	log.Println("TopicMachineMetricsCollect.getMetric nodes", strings.Join(nodes, ","))
 
 	metricsBatch, _ := getMetricsBatch(nodes)
 	for node, metricsEach := range metricsBatch {
@@ -129,7 +131,7 @@ func (s *TopicMachineMetricsCollect) getMetric() map[string]*TopicMachineMetric 
 
 func (s *TopicMachineMetricsCollect) collect() {
 	data := s.getMetric()
-	old := s.getMetric()
+	old := s.GetMetrics()
 	for k, v := range data {
 		if oldV := old[k]; oldV != nil {
 			v.SuccQpm = v.Succ - oldV.Succ

@@ -322,7 +322,7 @@ type TaskDebugData struct {
 //获取cgi错误的 job
 // demo http://localhost:19840/GetCGITaskDebug?queue=queue1&count=10
 func GetCGITaskDebug(node, queue string, count int) ([]TaskDebugData, error) {
-	u := fmt.Sprintf("http://%v/GetCGITaskDebug?queue=%s&count=%s", node, queue, count)
+	u := fmt.Sprintf("http://%v/GetCGITaskDebug?queue=%s&count=%d", node, queue, count)
 	resp, err := config.HttpClient.Get(u)
 	if err != nil {
 		return nil, err
