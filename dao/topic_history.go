@@ -11,8 +11,8 @@ import (
 
 type TopicHistory struct {
 	ginp.Model
-	Queue         string `json:"queue"`
-	Topic         string `json:"topic"`
+	Queue         string `json:"queue" gorm:"unique_index:uix_queue_topic"`
+	Topic         string `json:"topic" gorm:"unique_index:uix_queue_topic"`
 	Length        int64  `json:"length"`
 	RetryLength   int64  `json:"retry_length"`
 	TimeoutLength int64  `json:"timeout_length"`

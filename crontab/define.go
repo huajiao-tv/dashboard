@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"github.com/huajiao-tv/dashboard/config"
+	"github.com/huajiao-tv/dashboard/dao"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/robfig/cron"
+	"github.com/youlu-cn/ginp"
 )
 
 var (
@@ -39,6 +41,7 @@ func Init() {
 	c.AddFunc("@every 1m", TaskState.collect)
 	c.AddFunc("@every 1m", TaskTestClear)
 	c.AddFunc("@every 1m", TopicAlarmStats.collect)
+	c.AddFunc("@daily", DBTableCron)
 
 	c.Start()
 }
@@ -378,4 +381,25 @@ func getMetrics(node string) (map[string]*dto.MetricFamily, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+func DBTableCron() {
+	queueHistory := dao.QueueHistory{
+		Model: ginp.Model{
+			CreatedAt: time.Now().Add(time.Hour * 24).Local(),
+		},
+		DataType: dao.HourData,
+	}
+	topicHistory := dao.TopicHistory{
+		Model: ginp.Model{
+			CreatedAt: time.Now().Add(time.Hour * 24).Local(),
+		},
+		DataType: dao.HourData,
+	}
+	if !config.MySQL.HasTable(&queueHistory) {
+		config.MySQL.CreateTable(&queueHistory)
+	}
+	if !config.MySQL.HasTable(&topicHistory) {
+		config.MySQL.CreateTable(&topicHistory)
+	}
 }

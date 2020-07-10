@@ -32,13 +32,13 @@ type TopicMachineMetric struct {
 	Question    string
 }
 
-func (s TopicMachineMetricsCollect) GetMetrics() map[string]*TopicMachineMetric {
+func (s *TopicMachineMetricsCollect) GetMetrics() map[string]*TopicMachineMetric {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.metrics
 }
 
-func (s TopicMachineMetricsCollect) Get(queue, topic, node string) *TopicMachineMetric {
+func (s *TopicMachineMetricsCollect) Get(queue, topic, node string) *TopicMachineMetric {
 	key := fmt.Sprintf("%v/%v-%v", queue, topic, node)
 	s.mu.RLock()
 	data, ok := s.metrics[key]
@@ -49,7 +49,7 @@ func (s TopicMachineMetricsCollect) Get(queue, topic, node string) *TopicMachine
 	return &TopicMachineMetric{Node: node}
 }
 
-func (s TopicMachineMetricsCollect) getMetric() map[string]*TopicMachineMetric {
+func (s *TopicMachineMetricsCollect) getMetric() map[string]*TopicMachineMetric {
 	data := make(map[string]*TopicMachineMetric)
 	nodes, err := keeper.GetNodeList()
 	if err != nil {
@@ -127,7 +127,7 @@ func (s TopicMachineMetricsCollect) getMetric() map[string]*TopicMachineMetric {
 	return data
 }
 
-func (s TopicMachineMetricsCollect) collect() {
+func (s *TopicMachineMetricsCollect) collect() {
 	data := s.getMetric()
 	old := s.getMetric()
 	for k, v := range data {
