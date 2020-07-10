@@ -52,28 +52,21 @@ func (s *TopicLengthCollect) collect() {
 	}
 
 	topicChan := make(chan *dao.TopicHistory, len(topics))
-	var wg sync.WaitGroup
 	for _, topic := range topics {
-		wg.Add(1)
-		go func(topic *dao.Topic) {
-			defer wg.Done()
-			// todo retry
-			node := nodes[rand.Intn(len(nodes))]
-			info, err := GetTopicLength(node, topic.Queue, topic.Name)
-			if err != nil {
-				log.Println("getTopicLength failed:", err)
-				return
-			}
-			topicChan <- &dao.TopicHistory{
-				Queue:         topic.Queue,
-				Topic:         topic.Name,
-				Length:        info.Data.Normal,
-				RetryLength:   info.Data.Retry,
-				TimeoutLength: info.Data.Timeout,
-			}
-		}(topic)
+		node := nodes[rand.Intn(len(nodes))]
+		info, err := GetTopicLength(node, topic.Queue, topic.Name)
+		if err != nil {
+			log.Println("getTopicLength failed:", err)
+			return
+		}
+		topicChan <- &dao.TopicHistory{
+			Queue:         topic.Queue,
+			Topic:         topic.Name,
+			Length:        info.Data.Normal,
+			RetryLength:   info.Data.Retry,
+			TimeoutLength: info.Data.Timeout,
+		}
 	}
-	wg.Wait()
 
 	// save
 	if len(topicChan) == 0 {
