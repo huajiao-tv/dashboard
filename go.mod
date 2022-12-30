@@ -4,11 +4,9 @@ go 1.13
 
 require (
 	github.com/bitly/go-simplejson v0.5.0
-	github.com/coreos/etcd v3.3.18+incompatible // indirect
-	github.com/etcd-io/etcd v3.3.18+incompatible
-	github.com/gin-gonic/gin v1.5.0
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/gin-gonic/gin v1.7.0
 	github.com/go-redis/redis v6.15.6+incompatible
-	github.com/google/go-querystring v1.0.0
 	github.com/gorilla/websocket v1.4.1
 	github.com/huajiao-tv/gokeeper v0.0.0-20200407022642-05b60f4c831b
 	github.com/huajiao-tv/peppercron v0.0.0-20191226065308-a5e3ab6a1fda
@@ -20,5 +18,5 @@ require (
 	github.com/youlu-cn/ginp v0.0.0-20191226101237-1b2714a72f3c
 	github.com/youlu-cn/go-ldap v0.0.0-20190515043014-98a36176db8e
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20190917205325-a14579fbfb1a
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v2 v2.2.8
 )
